@@ -13,6 +13,7 @@ distancia_total=0
 pygame.init()
 
 LARGURA, ALTURA = 1200, 700
+#informações para os inputs dos semáforos
 base_font=pygame.font.Font(None, 32)
 semaforo_inicial=''
 semaforo_final=''
@@ -21,11 +22,11 @@ input_react_2=pygame.Rect(300, 480, 200, 30)
 color_input_1=pygame.Color('black')
 color_input_2=pygame.Color('black')
 
-#Criando botoes
+#Criando botoes para as telas
 botao_comecar=Botao("Começar", 150, 64, 930, 600 )
 botao_visualizar=Botao("Visualizar Grafo", 200, 64, 930, 600)
-botao_menu_voltar=Botao("Voltar Menu", 200, 64, 70, 600) #Opção de jogar novamente após o player vencer o jogo
-botao_encerrar_programa=Botao("Encerrar Programa", 250, 64, 930, 600)#Opção de fechar a tela após o player vencer o jogo
+botao_menu_voltar=Botao("Voltar Menu", 200, 64, 70, 600) 
+botao_encerrar_programa=Botao("Encerrar Programa", 250, 64, 930, 600)
 
 #Define o título da JANELA e estabelece a taxa de quadros por segundo.
 pygame.display.set_caption("Lista 6 - Algoritmo de Bellman-Ford - Semáforos de Recife")
@@ -33,7 +34,7 @@ JANELA = pygame.display.set_mode((LARGURA, ALTURA))
 relogio = pygame.time.Clock()
 FPS = 60
 
-
+#Configuração da manipulação de telas
 configuracao = {
     "Menu inicial": True,
     "Selecionar Semaforos": False,
@@ -42,7 +43,17 @@ configuracao = {
     
 }
 
+#Parte do codigo que vai definir os metodos do grafo
 
+#Função para verificar se existe ciclo negativo
+def verifica_ciclo_negativo(graph, dist):
+    for s, d, w in graph:
+        if dist[s] != float("inf") and dist[s] + w < dist[d]:
+            print("Graph contains negative weight cycle")
+            return True
+    return False
+
+#Função para calcular o peso/distancia entre dois pontos
 def haversine(lat1, lon1, lat2, lon2):
     # Raio da Terra em km
     R = 6371.0
@@ -64,6 +75,7 @@ def haversine(lat1, lon1, lat2, lon2):
     
     return distance
 
+#Função bellman_ford 
 def bellman_ford(grafo, semaforo_inicial, semaforo_final,dicionario_semaforos,mapeamento_ids,distancia_total=0,semaforos_vitados=None):
     if semaforos_vitados==None:
         semaforos_vitados=[]
@@ -86,43 +98,54 @@ def bellman_ford(grafo, semaforo_inicial, semaforo_final,dicionario_semaforos,ma
     distancia_total += menor_distancia
     return bellman_ford(grafo, semaforo_mais_proximo, semaforo_final,dicionario_semaforos,mapeamento_ids,distancia_total,semaforos_vitados)
 
+#Função para gerar o grafo e manipular o grafo
 def gerar_gafro(semaforo_inicial,semaforo_final):
     # Carregar os dados dos semáforos
+    print('carregando dados dos semáforos...')
     df = pd.read_csv('semaforos.csv', nrows=100)
 
     dicionario_semaforos = {}
 
+    # Mapear os semáforos para um dicionário
     for index, row in df.iterrows():
         numero_semaforo = int(row[0])  
         nome_semaforo = row[0]  # Assumindo que o nome do semáforo está na segunda coluna do CSV
         latitude = -(row[4] )
         longitude = row[5]
         nome_bairro=row[3]  
-        
         dicionario_semaforos[numero_semaforo] = (nome_semaforo, latitude, longitude,nome_bairro)
-    
+
+    # Criar um grafo representado pelo igraph
     grafo=Graph()
     if grafo:
         grafo.delete_vertices(v for v in grafo.vs )
-    # Criar um grafo representado pelo igraph
+    
+    
     # Adicionar vértices ao grafo e mapear os identificadores dos vértices para números de 0 a n-1
     mapeamento_ids = {}
-
     for i, (semaforo_num, (nome, latitude, longitude,nome_bairro)) in enumerate(dicionario_semaforos.items()):
         grafo.add_vertex(name=nome, latitude=latitude, longitude=longitude, bairro=nome_bairro)
         grafo.vs["color"] = "white"
         mapeamento_ids[semaforo_num] = i
-        
-    # Exibir informações sobre o grafo
+    
+    
+    
     grafo,distancia=bellman_ford(grafo, semaforo_inicial,semaforo_final,dicionario_semaforos,mapeamento_ids)  
-    print("Número de vértices:", grafo.vcount())
-    print("Número de arestas:", grafo.ecount())
-    print("Grafo:", grafo)
+    print('Grafo gerado com sucesso!')
+    if verifica_ciclo_negativo(grafo.get_edgelist(), distancia):
+        print("O grafo contém um ciclo de peso negativo.")
+        
+    
+    # mudar a cor do semáforo inicial e final
     grafo.vs[semaforo_inicial-1]["color"] = "green"
     grafo.vs[semaforo_final-1]["color"] = "red"
 
+    # muda a label dos vértices
     vertex_labels = [f"\n{nome}\n{bairro}" for nome, bairro in zip(grafo.vs['name'], grafo.vs['bairro'])]
+    # muda o layout do grafo
     layout = [(v['longitude'], v['latitude']) for v in grafo.vs] 
+    # salva o grafo
+    print('salvando o grafo...')
     plot(grafo, layout=layout,  bbox=(1200, 700), margin=50, vertex_label=vertex_labels, vertex_label_size=10 , vertex_size=16,  vertex_color=grafo.vs['color'], edge_width=grafo.es['weight'], edge_color="black", vertex_label_dist=-1, edge_arrow_size=0.5,  vertex_label_color="black").save("Grafo.png")
     grafo.delete_vertices(v for v in grafo.vs )
     return distancia
@@ -132,6 +155,8 @@ def draw_texto(texto,x,y):
     fonte = pygame.font.SysFont(None, 36)  
     texto_renderizado = fonte.render(texto, True, PRETO) 
     JANELA.blit(texto_renderizado, (x,y))  
+
+#Tela de menu inicial  
 def Menu():
     
     global configuracao
@@ -157,10 +182,10 @@ def Menu():
         
         pygame.display.update()
 
-
+#Tela para selecionar os semáforos
 def Selecionar():
 
-    
+    #Variáveis globais
     global configuracao
     global semaforo_inicial
     global semaforo_final
@@ -192,10 +217,14 @@ def Selecionar():
         JANELA.blit(texto_surface_2,(input_react_2.x+5,input_react_2.y+5))
 
         if botao_visualizar.draw():
+            #Verifica se os inputs existem
             if semaforo_inicial!="" and semaforo_final!=""  :
+                #Verifica se os inputs são números
                 try:
                     semaforo_inicial_data=int(semaforo_inicial)
                     semaforo_final_data=int(semaforo_final)
+                    #Verifica se os inputs estão entre 1 e 100
+
                     if semaforo_inicial_data>0 and semaforo_inicial_data<101 and semaforo_final_data>0 and semaforo_final_data<101:
                         menu_final_rodando = False
                         color_input_1=pygame.Color('black')
@@ -220,6 +249,7 @@ def Selecionar():
                 menu_final_rodando = False
                 pygame.quit()
 
+            #Verifica se o botão do mouse foi pressionado
             if evento.type==pygame.MOUSEBUTTONDOWN:
                 if input_react_1.collidepoint(evento.pos):
                     semaforo_final=""
@@ -236,6 +266,7 @@ def Selecionar():
                     color_input_2=pygame.Color('white')
                     color_input_1=pygame.Color('black')
 
+            #Verifica se uma tecla foi pressionada e passa o valor para a variável
             if evento.type==pygame.KEYDOWN:
                 if semaforo_final_ativo:
                     if evento.key==pygame.K_BACKSPACE:
@@ -256,12 +287,13 @@ def Selecionar():
 
         pygame.display.update()
 
+#Tela para visualizar o grafo
 def Vizualizar():
     
     global configuracao
     global distancia_total
     texto_final=f"Distância total Percorrida: {distancia_total:.2f} km"
-
+    #Pega a imagem do grafo
     background_grafo = pygame.image.load("./Grafo.png")
     tamanho_background_grafo = pygame.transform.scale(background_grafo,(1200, 700))
     menu_final_rodando = True
