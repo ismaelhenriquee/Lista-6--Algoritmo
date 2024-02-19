@@ -81,9 +81,16 @@ def bellman_ford(grafo, semaforo_inicial, semaforo_final,dicionario_semaforos,ma
             if distancia < menor_distancia:
                 menor_distancia = distancia
                 semaforo_mais_proximo = outro_semaforo_num
+    
     grafo.vs[mapeamento_ids[semaforo_mais_proximo]]["color"] = "blue"
     grafo.add_edge(mapeamento_ids[semaforo_inicial], mapeamento_ids[semaforo_mais_proximo], weight=menor_distancia)
     distancia_total += menor_distancia
+    for edge in grafo.es:
+        u = edge.source
+        v = edge.target
+        weight = edge['weight']
+        if distancia_total + weight < 0:
+            raise ValueError("O grafo contém um ciclo negativo")
     return bellman_ford(grafo, semaforo_mais_proximo, semaforo_final,dicionario_semaforos,mapeamento_ids,distancia_total,semaforos_vitados)
 
 def gerar_gafro(semaforo_inicial,semaforo_final):
@@ -121,9 +128,12 @@ def gerar_gafro(semaforo_inicial,semaforo_final):
     grafo.vs[semaforo_inicial-1]["color"] = "green"
     grafo.vs[semaforo_final-1]["color"] = "red"
 
+
+
     vertex_labels = [f"\n{nome}\n{bairro}" for nome, bairro in zip(grafo.vs['name'], grafo.vs['bairro'])]
     layout = [(v['longitude'], v['latitude']) for v in grafo.vs] 
-    plot(grafo, layout=layout,  bbox=(1200, 700), margin=50, vertex_label=vertex_labels, vertex_label_size=10 , vertex_size=16,  vertex_color=grafo.vs['color'], edge_width=grafo.es['weight'], edge_color="black", vertex_label_dist=-1, edge_arrow_size=0.5,  vertex_label_color="black").save("Grafo.png")
+    edge_labels = [f"{weight:.2f} km" for weight in grafo.es['weight']]
+    plot(grafo, layout=layout,  bbox=(1200, 700), margin=50, vertex_label=vertex_labels, vertex_label_size=10 , vertex_size=16,  vertex_color=grafo.vs['color'], edge_width=1, edge_color="black", vertex_label_dist=-1, edge_arrow_size=0.5,  vertex_label_color="black", edge_label= edge_labels, edge_label_color="black", edge_label_size=10).save("Grafo.png")
     grafo.delete_vertices(v for v in grafo.vs )
     return distancia
 
@@ -317,7 +327,6 @@ while jogo_rodando:
     pygame.display.update()
 
 pygame.quit()
-
 
 
 
