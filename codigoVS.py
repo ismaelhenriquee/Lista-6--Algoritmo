@@ -70,6 +70,16 @@ def bellman_ford(grafo, semaforo_inicial, semaforo_final,dicionario_semaforos,ma
     if semaforo_inicial == semaforo_final:
         semaforos_vitados=None
         return grafo,distancia_total
+    if len(semaforos_vitados) > 2:
+        caminho_atual = semaforos_vitados[-3:]
+        if len(set(caminho_atual)) < len(caminho_atual):
+            soma_ciclo = 0
+            for i in caminho_atual:
+                soma_ciclo += grafo.vs[i-1]["weight"]
+            if soma_ciclo < 0:
+                print("Ciclo negativo encontrado!")
+                raise ValueError("O grafo contém um ciclo negativo")
+                
     semaforos_vitados.append(semaforo_inicial)
     menor_distancia = float('inf')
     semaforo_mais_proximo = None
