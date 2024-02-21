@@ -20,3 +20,6 @@ Consideramos a vasta quantidade de semáforos no Recife , propusemos a construç
 <h2>Conclusão</h2>
 Chegamos a conclusão que, após clonar o grafo aparecerá uma tela pedindo para iniciar e escolher os pontos. Com esse trabalho aprendemos a usar bibliotecas e analisar como funciona um grafo, relacionando-o com uma tabela passível de interpretações sobre localização de semáforos no Recife e tirar conclusões sobre possíveis caminhos a se  seguir.
 
+![projeto](https://github.com/ismaelhenriquee/Lista-6--Algoritmo/assets/124205616/9775ccc0-4d62-4378-9bd5-ed28c1dfe22f)
+![projet](https://github.com/ismaelhenriquee/Lista-6--Algoritmo/assets/124205616/1f9cfe7c-155f-4e30-a0d7-a33dc4816c0c)
+![projets](https://github.com/ismaelhenriquee/Lista-6--Algoritmo/assets/124205616/a288aaff-ba30-47ea-951b-dd51f40d5a76)
